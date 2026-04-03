@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>《江南百景图》游戏策划分析</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;700&family=Noto+Sans+SC:wght@300;400&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   CSS CUSTOM PROPERTIES — COLOR SYSTEM & TOKENS
+   ============================================================ */
+:root {
+  --paper:       #f5f0e8;
+  --paper-dark:  #ede6d8;
+  --ink:         #1a1710;
+  --ink-light:   #3d3a33;
+  --ink-faint:   #7a756a;
+  --ash:         #9ba8a3;
+  --pine:        #3a5a52;
+  --pine-light:  #5d8a7e;
+  --gold:        #b8943f;
+  --gold-light:  #d4b060;
+  --gold-faint:  #f0dfa0;
+  --celadon:     #a8c4bb;
+  --rouge:       #8b3a3a;
+  --border:      rgba(58,90,82,0.18);
+  --shadow:      rgba(26,23,16,0.12);
+  --font-display: 'ZCOOL XiaoWei', 'Noto Serif SC', serif;
+  --font-serif:   'Noto Serif SC', serif;
+  --font-sans:    'Noto Sans SC', sans-serif;
+}
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-serif);
+  line-height: 1.9;
+  overflow-x: hidden;
+}
+::selection { background: var(--gold-faint); color: var(--ink); }
+img { max-width: 100%; display: block; }
+/* ===== 图片统一尺寸 ===== */
+.media-img {
+  width: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+  border: 1px solid var(--border);
+  background: var(--paper-dark);
+}
+
+/* overview：1080x1980 */
+.img-overview {
+  aspect-ratio: 1080 / 1980;
+  max-height: 620px;
+}
+
+/* overview2：1320x629 */
+.img-overview2 {
+  aspect-ratio: 1320 / 629;
+  max-height: 260px;
+}
+
+/* A组：art / culture / build / emotion */
+.img-a {
+  height: 220px;
+}
+
+/* B组：social / tourism */
+.img-b {
+  height: 240px;
+}
+a { color: inherit; text-decoration: none; }
+
+/* ============================================================
+   SCROLL PROGRESS BAR
+   ============================================================ */
+#progress-bar {
+  position: fixed;
+  top: 0; left: 0;
+  height: 3px;
+  width: 0%;
+  background: linear-gradient(90deg, var(--gold), var(--pine-light));
+  z-index: 1000;
+  transition: width 0.1s linear;
+}
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+#nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 3rem;
+  height: 56px;
+  background: rgba(245,240,232,0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  transform: translateY(-100%);
+  transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+#nav.visible { transform: translateY(0); }
+.nav-logo {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--pine);
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+.nav-links {
+  display: flex;
+  gap: 2rem;
+  list-style: none;
+}
+.nav-links a {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+  letter-spacing: 0.08em;
+  padding: 0.2rem 0;
+  border-bottom: 1px solid transparent;
+  transition: color 0.25s, border-color 0.25s;
+}
+.nav-links a:hover { color: var(--pine); border-color: var(--pine); }
+
+/* hamburger */
+.nav-toggle { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 6px; }
+.nav-toggle span { display: block; width: 22px; height: 1.5px; background: var(--ink); transition: all 0.3s; }
+
+/* ============================================================
+   HERO SECTION
+   ============================================================ */
+#hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  padding: 6rem 2rem 4rem;
+}
+
+/* Paper texture overlay */
+#hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* SVG mountain / landscape watermark */
+.hero-bg-ink {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  width: 100%;
+  opacity: 0.07;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  max-width: 720px;
+}
+
+.hero-eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.35em;
+  color: var(--pine);
+  text-transform: uppercase;
+  margin-bottom: 1.8rem;
+  opacity: 0;
+  animation: fadeUp 1s 0.3s forwards;
+}
+
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.8rem, 8vw, 5.5rem);
+  line-height: 1.15;
+  color: var(--ink);
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
+  opacity: 0;
+  animation: fadeUp 1s 0.55s forwards;
+}
+.hero-title .accent { color: var(--pine); }
+
+.hero-subtitle {
+  font-family: var(--font-serif);
+  font-size: clamp(1rem, 2.5vw, 1.3rem);
+  color: var(--ink-faint);
+  font-weight: 300;
+  letter-spacing: 0.15em;
+  margin-bottom: 2.5rem;
+  opacity: 0;
+  animation: fadeUp 1s 0.75s forwards;
+}
+
+.hero-thesis {
+  display: inline-block;
+  background: var(--paper-dark);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--gold);
+  padding: 1rem 1.6rem;
+  font-size: 0.9rem;
+  color: var(--ink-light);
+  line-height: 1.8;
+  text-align: left;
+  max-width: 560px;
+  margin-bottom: 3rem;
+  opacity: 0;
+  animation: fadeUp 1s 0.95s forwards;
+}
+
+.hero-scroll-hint {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  color: var(--ash);
+  opacity: 0;
+  animation: fadeUp 1s 1.4s forwards, pulseOpacity 2.5s 2.4s infinite;
+}
+.scroll-arrow {
+  display: block;
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(to bottom, var(--ash), transparent);
+  margin: 0.7rem auto 0;
+}
+
+/* decorative seal */
+.hero-seal {
+  position: absolute;
+  top: 8rem;
+  right: 6%;
+  width: 80px;
+  height: 80px;
+  opacity: 0;
+  animation: fadeIn 1.2s 1.6s forwards;
+  pointer-events: none;
+}
+
+/* ============================================================
+   SECTION GENERIC STYLES
+   ============================================================ */
+section {
+  padding: 6rem 2rem;
+  position: relative;
+}
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+}
+.wide-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* Bamboo divider */
+.bamboo-divider {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  margin-bottom: 3rem;
+}
+.bamboo-divider::before,
+.bamboo-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--border), transparent);
+}
+.bamboo-label {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  letter-spacing: 0.4em;
+  color: var(--ash);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Section heading */
+.section-heading {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  letter-spacing: 0.08em;
+  color: var(--ink);
+  margin-bottom: 0.5rem;
+}
+.section-sub {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--ash);
+  letter-spacing: 0.1em;
+  margin-bottom: 3rem;
+}
+
+/* Scroll reveal */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1),
+              transform 0.7s cubic-bezier(0.4,0,0.2,1);
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+
+/* ============================================================
+   SECTION 1 — OVERVIEW
+   ============================================================ */
+#overview {
+  background: var(--paper);
+}
+.overview-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: start;
+}
+.overview-text p {
+  font-size: 0.95rem;
+  color: var(--ink-light);
+  margin-bottom: 1.2rem;
+  line-height: 2;
+}
+.overview-text strong { color: var(--pine); font-weight: 500; }
+
+/* Image placeholder */
+.img-placeholder {
+  background: var(--paper-dark);
+  border: 1px dashed var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 2rem;
+  color: var(--ash);
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-align: center;
+  position: relative;
+}
+.img-placeholder .ph-icon {
+  width: 36px; height: 36px;
+  opacity: 0.35;
+}
+.img-placeholder .ph-label { color: var(--ink-faint); font-size: 0.7rem; }
+.img-placeholder .ph-note { color: var(--ash); font-size: 0.62rem; margin-top: 0.3rem; }
+
+/* Keyword cards row */
+.keyword-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.2rem;
+  margin-top: 2.5rem;
+}
+.kw-card {
+  background: var(--paper-dark);
+  border: 1px solid var(--border);
+  padding: 1.6rem 1.2rem;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.kw-card::before {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 100%; height: 3px;
+  background: var(--pine);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s;
+}
+.kw-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px var(--shadow); }
+.kw-card:hover::before { transform: scaleX(1); }
+.kw-card .kw-num {
+  font-family: var(--font-sans);
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  color: var(--gold);
+  margin-bottom: 0.6rem;
+}
+.kw-card .kw-word {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--ink);
+  margin-bottom: 0.5rem;
+}
+.kw-card .kw-desc {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+  line-height: 1.7;
+}
+
+/* ============================================================
+   SECTION 2 — SUCCESS
+   ============================================================ */
+#success {
+  background: var(--pine);
+  color: var(--paper);
+  position: relative;
+  overflow: hidden;
+}
+#success::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cpath d='M0 30 Q15 0 30 30 Q45 60 60 30' stroke='rgba(255,255,255,0.04)' fill='none' stroke-width='1'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+.success-card {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-top: 3px solid var(--gold);
+  padding: 2.5rem 3rem;
+  margin-bottom: 3rem;
+}
+.success-card .quote-mark {
+  font-family: var(--font-display);
+  font-size: 4rem;
+  color: var(--gold);
+  line-height: 0.6;
+  margin-bottom: 1rem;
+  opacity: 0.6;
+}
+.success-card .quote-text {
+  font-size: clamp(1rem, 2.5vw, 1.3rem);
+  line-height: 2;
+  letter-spacing: 0.05em;
+  font-weight: 300;
+}
+.success-card .quote-text em { color: var(--gold-light); font-style: normal; }
+
+.success-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-top: 2rem;
+}
+.tag {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  color: var(--paper);
+  border: 1px solid rgba(255,255,255,0.25);
+  padding: 0.35rem 0.9rem;
+  transition: background 0.25s;
+}
+.tag:hover { background: rgba(255,255,255,0.1); }
+
+.success-pillars {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+.pillar {
+  padding: 1.5rem;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-top: 2px solid var(--gold);
+  transition: background 0.3s;
+}
+.pillar:hover { background: rgba(255,255,255,0.05); }
+.pillar-title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--gold-light);
+  margin-bottom: 0.7rem;
+}
+.pillar-body {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  color: rgba(245,240,232,0.7);
+  line-height: 1.8;
+}
+
+/* ============================================================
+   SECTION 3 — MECHANISMS
+   ============================================================ */
+#mechanisms {
+  background: var(--paper);
+}
+.mech-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+.mech-card {
+  background: var(--paper-dark);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  overflow: hidden;
+  transition: box-shadow 0.3s, transform 0.3s;
+  position: relative;
+}
+.mech-card:hover { box-shadow: 0 12px 32px var(--shadow); transform: translateY(-2px); }
+.mech-card-header {
+  padding: 1.8rem 1.8rem 1.2rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+.mech-icon {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--border);
+  background: var(--paper);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1.3rem;
+}
+.mech-header-text {}
+.mech-num {
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  letter-spacing: 0.25em;
+  color: var(--gold);
+  margin-bottom: 0.25rem;
+}
+.mech-title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--ink);
+  letter-spacing: 0.05em;
+}
+.mech-subtitle {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  color: var(--ash);
+  margin-top: 0.2rem;
+}
+.mech-summary {
+  padding: 0 1.8rem 1.5rem;
+  font-family: var(--font-sans);
+  font-size: 0.83rem;
+  color: var(--ink-light);
+  line-height: 1.8;
+}
+.mech-expand-btn {
+  padding: 0.8rem 1.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  color: var(--pine);
+  border-top: 1px solid var(--border);
+  background: none;
+  border-left: none; border-right: none; border-bottom: none;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.2s;
+}
+.mech-expand-btn:hover { background: rgba(58,90,82,0.06); }
+.expand-arrow {
+  display: inline-block;
+  transition: transform 0.3s;
+  font-size: 0.8rem;
+}
+.mech-card.open .expand-arrow { transform: rotate(180deg); }
+
+.mech-detail {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+.mech-card.open .mech-detail { max-height: 600px; }
+.mech-detail-inner {
+  padding: 1.5rem 1.8rem 2rem;
+  border-top: 1px solid var(--border);
+  background: var(--paper);
+}
+
+.logic-block {
+  margin-bottom: 1.2rem;
+}
+.logic-label {
+  font-family: var(--font-sans);
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 0.4rem;
+}
+.logic-text {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--ink-light);
+  line-height: 1.9;
+}
+.logic-text .because { color: var(--pine); font-weight: 500; }
+.logic-text .therefore { color: var(--rouge); font-weight: 500; }
+
+.mech-img-slot {
+  margin-top: 1rem;
+}
+.mech-img-slot .img-placeholder {
+  height: 120px;
+  font-size: 0.68rem;
+}
+
+/* ============================================================
+   SECTION 4 — SPREAD
+   ============================================================ */
+#spread {
+  background: var(--paper-dark);
+  position: relative;
+}
+.spread-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: stretch;
+}
+.spread-panel {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  padding: 2.2rem;
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.3s;
+}
+.spread-panel:hover { box-shadow: 0 8px 32px var(--shadow); }
+.spread-panel::after {
+  content: attr(data-label);
+  position: absolute;
+  top: -1px; right: -1px;
+  background: var(--pine);
+  color: var(--paper);
+  font-family: var(--font-sans);
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  padding: 0.25rem 0.7rem;
+}
+.spread-panel-title {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  color: var(--ink);
+  margin-bottom: 0.3rem;
+}
+.spread-panel-sub {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  color: var(--gold);
+  letter-spacing: 0.1em;
+  margin-bottom: 1.2rem;
+}
+.spread-panel p {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--ink-light);
+  line-height: 1.9;
+  margin-bottom: 1rem;
+}
+.spread-panel p .kw { color: var(--pine); font-weight: 500; }
+
+.flow-diagram {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 1.2rem 0;
+}
+.flow-node {
+  background: var(--pine);
+  color: var(--paper);
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  padding: 0.35rem 0.8rem;
+  white-space: nowrap;
+}
+.flow-arrow {
+  color: var(--gold);
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+/* ============================================================
+   SECTION 5 — SUMMARY / CLOSING SCROLL
+   ============================================================ */
+#summary {
+  background: var(--ink);
+  color: var(--paper);
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+.summary-scroll-bg {
+  position: absolute;
+  inset: 0;
+  opacity: 0.06;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='200'%3E%3Cpath d='M0 100 Q100 20 200 100 Q300 180 400 100 Q500 20 600 100 Q700 180 800 100' stroke='white' fill='none' stroke-width='1' opacity='0.5'/%3E%3Cpath d='M0 130 Q100 50 200 130 Q300 210 400 130 Q500 50 600 130 Q700 210 800 130' stroke='white' fill='none' stroke-width='0.5'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  pointer-events: none;
+}
+.summary-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  max-width: 740px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+.summary-chapter {
+  font-family: var(--font-sans);
+  font-size: 0.65rem;
+  letter-spacing: 0.4em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 2rem;
+}
+.summary-quote {
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 3.5vw, 2.4rem);
+  line-height: 1.6;
+  letter-spacing: 0.1em;
+  color: var(--paper);
+  margin-bottom: 2rem;
+}
+.summary-quote .hl { color: var(--gold-light); }
+.summary-body {
+  font-family: var(--font-serif);
+  font-size: 0.88rem;
+  color: rgba(245,240,232,0.65);
+  line-height: 2;
+  margin-bottom: 3rem;
+  font-weight: 300;
+}
+
+.summary-tags {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-bottom: 3rem;
+}
+.summary-tag {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  color: var(--gold-light);
+  border: 1px solid rgba(184,148,63,0.4);
+  padding: 0.4rem 1rem;
+  transition: background 0.25s;
+}
+.summary-tag:hover { background: rgba(184,148,63,0.12); }
+
+/* closing scroll graphic */
+.scroll-ends {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.scroll-end {
+  width: 60px; height: 18px;
+  border: 1px solid rgba(184,148,63,0.3);
+  border-radius: 2px;
+  background: linear-gradient(to right, rgba(184,148,63,0.2), transparent);
+}
+.scroll-end:last-child {
+  background: linear-gradient(to left, rgba(184,148,63,0.2), transparent);
+}
+.scroll-middle {
+  font-family: var(--font-sans);
+  font-size: 0.6rem;
+  letter-spacing: 0.35em;
+  color: rgba(184,148,63,0.5);
+  text-transform: uppercase;
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+footer {
+  background: var(--ink);
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 2rem;
+  text-align: center;
+}
+footer p {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  color: rgba(245,240,232,0.25);
+  letter-spacing: 0.1em;
+}
+
+/* ============================================================
+   DECORATIVE SVG ELEMENTS
+   ============================================================ */
+.deco-wave {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.06;
+}
+.deco-corner {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.12;
+}
+
+/* ============================================================
+   KEYFRAME ANIMATIONS
+   ============================================================ */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; } to { opacity: 1; }
+}
+@keyframes pulseOpacity {
+  0%,100% { opacity: 0.6; } 50% { opacity: 0.2; }
+}
+@keyframes float {
+  0%,100% { transform: translateY(0); }
+  50%     { transform: translateY(-6px); }
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+  #nav { padding: 0 1.2rem; }
+  .nav-links { display: none; flex-direction: column; gap: 0; position: absolute; top: 56px; left: 0; right: 0; background: rgba(245,240,232,0.97); border-bottom: 1px solid var(--border); padding: 1rem 1.5rem; }
+  .nav-links.open { display: flex; }
+  .nav-links a { padding: 0.6rem 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+  .nav-toggle { display: flex; }
+
+  section { padding: 4rem 1.2rem; }
+  .overview-grid { grid-template-columns: 1fr; gap: 2rem; }
+  .keyword-cards { grid-template-columns: 1fr; gap: 1rem; }
+  .mech-grid { grid-template-columns: 1fr; }
+  .spread-grid { grid-template-columns: 1fr; }
+  .success-pillars { grid-template-columns: 1fr; gap: 1rem; }
+  .hero-seal { display: none; }
+  .summary-content { padding: 1rem; }
+}
+@media (max-width: 480px) {
+  .keyword-cards { grid-template-columns: 1fr; }
+  .success-card { padding: 1.5rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== PROGRESS BAR ==================== -->
+<div id="progress-bar"></div>
+
+<!-- ==================== NAVIGATION ==================== -->
+<nav id="nav" role="navigation" aria-label="主导航">
+  <span class="nav-logo">《江南百景图》数字策划</span>
+  <ul class="nav-links" id="nav-links">
+    <li><a href="#overview">项目概述</a></li>
+    <li><a href="#success">成功解析</a></li>
+    <li><a href="#mechanisms">核心机制</a></li>
+    <li><a href="#spread">出圈传播</a></li>
+    <li><a href="#summary">总结提炼</a></li>
+  </ul>
+  <button class="nav-toggle" id="nav-toggle" aria-label="展开菜单">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- ==================== HERO ==================== -->
+<section id="hero" aria-label="封面">
+
+  <!-- SVG ink landscape background -->
+  <svg class="hero-bg-ink" viewBox="0 0 1400 400" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMax slice">
+    <path d="M0 300 Q70 200 140 260 Q210 320 280 240 Q350 160 420 220 Q490 280 560 200 Q630 120 700 180 Q770 240 840 160 Q910 80 980 140 Q1050 200 1120 130 Q1190 60 1260 120 Q1330 180 1400 100 L1400 400 L0 400 Z" fill="#3a5a52"/>
+    <path d="M0 350 Q100 280 200 320 Q300 360 400 290 Q500 220 600 270 Q700 320 800 250 Q900 180 1000 230 Q1100 280 1200 210 Q1300 140 1400 190 L1400 400 L0 400 Z" fill="#2d4840" opacity="0.6"/>
+    <!-- pagoda silhouette -->
+    <rect x="620" y="160" width="8" height="120" fill="#1a2820" opacity="0.5"/>
+    <polygon points="600,160 628,135 656,160" fill="#1a2820" opacity="0.5"/>
+    <polygon points="608,145 628,125 648,145" fill="#1a2820" opacity="0.5"/>
+    <rect x="610" y="200" width="36" height="6" fill="#1a2820" opacity="0.4"/>
+    <rect x="608" y="220" width="40" height="6" fill="#1a2820" opacity="0.3"/>
+    <!-- bridge -->
+    <path d="M300 350 Q380 330 460 350" stroke="#1a2820" fill="none" stroke-width="3" opacity="0.4"/>
+    <line x1="340" y1="350" x2="340" y2="370" stroke="#1a2820" stroke-width="2" opacity="0.3"/>
+    <line x1="420" y1="350" x2="420" y2="370" stroke="#1a2820" stroke-width="2" opacity="0.3"/>
+    <!-- willow tree suggestion -->
+    <line x1="900" y1="400" x2="900" y2="230" stroke="#1a2820" stroke-width="4" opacity="0.4"/>
+    <path d="M900 250 Q920 280 910 310 Q930 285 925 260" stroke="#1a2820" fill="none" opacity="0.3"/>
+    <path d="M900 260 Q880 285 885 315 Q875 290 878 265" stroke="#1a2820" fill="none" opacity="0.3"/>
+  </svg>
+
+  <!-- Decorative seal SVG (top right) -->
+  <svg class="hero-seal" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <rect x="2" y="2" width="76" height="76" fill="none" stroke="#b8943f" stroke-width="1.5"/>
+    <rect x="8" y="8" width="64" height="64" fill="rgba(184,148,63,0.08)"/>
+    <text x="40" y="32" text-anchor="middle" font-family="Noto Serif SC,serif" font-size="10" fill="#b8943f" letter-spacing="1">江南</text>
+    <text x="40" y="48" text-anchor="middle" font-family="Noto Serif SC,serif" font-size="10" fill="#b8943f" letter-spacing="1">百景</text>
+    <text x="40" y="64" text-anchor="middle" font-family="Noto Serif SC,serif" font-size="10" fill="#b8943f" letter-spacing="1">分析</text>
+  </svg>
+
+  <div class="hero-content">
+    <p class="hero-eyebrow">游戏策划分析 · Case Analysis</p>
+    <p style="font-family:var(--font-sans);font-size:0.8rem;letter-spacing:0.3em;color:var(--gold);margin-bottom:1.4rem;opacity:0;animation:fadeUp 1s 0.42s forwards;">袁 清 渠 · 设 计 制 作</p>
+    <h1 class="hero-title">《江南<span class="accent">百景图</span>》</h1>
+    <p class="hero-subtitle">“我要这画卷里都是你的故事”</p>
+    <div class="hero-thesis">
+      用“反主流”的审美叙事，精准击中了现代玩家对<strong style="color:var(--pine)">慢节奏</strong>与<strong style="color:var(--pine)">归属感</strong>的渴求。将传统文化转译为一个可被大众自由栖居的数字精神家园。
+    </div>
+    <p class="hero-scroll-hint">向下探索<span class="scroll-arrow"></span></p>
+  </div>
+</section>
+
+<!-- ==================== OVERVIEW ==================== -->
+<section id="overview">
+  <div class="container">
+    <div class="bamboo-divider reveal">
+      <span class="bamboo-label">Section 01 · 游戏概述</span>
+    </div>
+    <div class="overview-grid">
+      <div class="overview-text reveal">
+        <h2 class="section-heading">慢节奏的<br>市井「造梦」</h2>
+        <p class="section-sub">游戏类型 · 核心体验 · 玩法定位</p>
+        <p>这是一款以<strong>明代江南</strong>为背景的模拟经营手游。玩家化身知府，通过规划城市、经营产业、安排居民起居，一步步重绘江南盛景。</p>
+        <p>不同于高强度的策略博弈，其核心而在于<strong>慢节奏的建造与探索</strong>之中，获得一种对数字世界的掌控感和审美满足。</p>
+        <p>它成功地把一款经营游戏，做成了一处<strong>可以栖居的虚拟精神家园</strong>，在快节奏的现代生活中提供了稀缺的情绪价值。</p>
+      </div>
+      <div class="reveal reveal-delay-2">
+        <!-- 图片 ① 游戏主界面 -->
+        <img src="image/overview.jpg" alt="《江南百景图》游戏主界面截图" class="media-img img-overview">
+      </div>
+    </div>
+
+    <!-- Keyword cards -->
+    <div class="keyword-cards">
+      <div class="kw-card reveal reveal-delay-1">
+        <div class="kw-num">KEYWORD 01</div>
+        <div class="kw-word">慢节奏</div>
+        <div class="kw-desc">没有限时压力、排名焦虑，玩家在自己的时间轴上自由建造，拒绝快餐逻辑。</div>
+      </div>
+      <div class="kw-card reveal reveal-delay-2">
+        <div class="kw-num">KEYWORD 02</div>
+        <div class="kw-word">造 梦</div>
+        <div class="kw-desc">通过选择与摆放，把玩家脑海中"理想的江南"实体化为数字景观。</div>
+      </div>
+      <div class="kw-card reveal reveal-delay-3">
+        <div class="kw-num">KEYWORD 03</div>
+        <div class="kw-word">掌控感</div>
+        <div class="kw-desc">经营成果完全由玩家决定，高确定性反馈让现实中失序的焦虑得到有效对冲。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SUCCESS ==================== -->
+<section id="success">
+
+  <!-- decorative wave top -->
+  <svg class="deco-wave" style="top:0;left:0;width:100%;height:60px;" viewBox="0 0 1400 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M0 60 Q350 0 700 40 Q1050 80 1400 20 L1400 0 L0 0 Z" fill="rgba(255,255,255,0.04)"/>
+  </svg>
+
+  <div class="container">
+    <div class="bamboo-divider reveal" style="--border:rgba(255,255,255,0.15);">
+      <span class="bamboo-label" style="color:rgba(184,148,63,0.7)">Section 02 · 成功解析</span>
+    </div>
+    <h2 class="section-heading reveal" style="color:var(--paper)">差异化的<br>情感疗愈</h2>
+
+    <div class="success-card reveal reveal-delay-1">
+      <div class="quote-mark">"</div>
+      <p class="quote-text">
+        将高饱和度的传统文化符号进行「低门槛」的数字化复刻，把游戏变成了一个可以<em>栖居</em>的虚拟精神家园，从而在快节奏的现代生活中，提供了一种<em>稀缺的情绪价值</em>。
+      </p>
+      <div class="success-tags">
+        <span class="tag">情感疗愈</span>
+        <span class="tag">审美差异化</span>
+        <span class="tag">文化转译</span>
+        <span class="tag">低门槛入场</span>
+        <span class="tag">精神归属感</span>
+      </div>
+    </div>
+
+    <div class="success-pillars reveal reveal-delay-2">
+      <div class="pillar">
+        <div class="pillar-title">情感疗愈</div>
+        <div class="pillar-body">在充满焦虑的现代生活中，提供了"不被评判、可以喘息"的数字避难所，满足了玩家对情绪价值的深度渴望。</div>
+      </div>
+      <div class="pillar">
+        <div class="pillar-title">审美差异化</div>
+        <div class="pillar-body">水墨手绘风格在一众高清3D游戏中形成强烈视觉反差，建立了难以复刻的审美门槛和品牌识别度。</div>
+      </div>
+      <div class="pillar">
+        <div class="pillar-title">文化转译</div>
+        <div class="pillar-body">把宏大的历史叙事降解为个人化的市井生活，让文化底蕴变成可感可触的互动体验，而非高高在上的知识负担。</div>
+      </div>
+    </div>
+
+    <!-- 图片 ② 游戏宣传图 -->
+    <img src="image/overview2.jpg" alt="《江南百景图》宣传图" class="media-img img-overview2">
+  </div>
+</section>
+
+<!-- ==================== MECHANISMS ==================== -->
+<section id="mechanisms">
+  <div class="wide-container">
+    <div class="bamboo-divider reveal">
+      <span class="bamboo-label">Section 03 · 核心机制拆解</span>
+    </div>
+    <h2 class="section-heading reveal">四个设计逻辑</h2>
+    <p class="section-sub reveal">点击卡片查看完整因果分析</p>
+
+    <div class="mech-grid">
+
+      <!-- Card 1: Visual & Art -->
+      <div class="mech-card reveal reveal-delay-1" data-id="visual">
+        <div class="mech-card-header">
+          <div class="mech-icon">🖌</div>
+          <div class="mech-header-text">
+            <div class="mech-num">MECHANISM 01</div>
+            <div class="mech-title">视觉与美术</div>
+            <div class="mech-subtitle">符号化的水墨滤镜</div>
+          </div>
+        </div>
+        <div class="mech-summary">
+          游戏以吴派山水画的留白技法，将江南的粉墙黛瓦、小桥流水进行了高度<strong>符号化提炼</strong>，形成了在市场上独一无二的手绘视觉语言。
+        </div>
+        <button class="mech-expand-btn" aria-expanded="false">
+          <span>展开设计逻辑</span><span class="expand-arrow">▾</span>
+        </button>
+        <div class="mech-detail">
+          <div class="mech-detail-inner">
+            <div class="logic-block">
+              <div class="logic-label">设计逻辑</div>
+              <div class="logic-text">没有采用主流3D建模，而是用<strong>吴派山水画的滤镜与留白技法</strong>，把江南意象进行了符号化提炼。粉墙黛瓦、小桥流水、烟雨楼阁，每一帧都像一幅可交互的水墨长卷。</div>
+            </div>
+            <div class="logic-block">
+              <div class="logic-label">因果分析</div>
+              <div class="logic-text">
+                <span class="because"></span>这种“不媚俗”的手绘质感在一众追求高清写实的游戏中形成了强烈的视觉反差，<span class="therefore">使得</span>玩家能瞬间建立起对“唯美江南”的地方想象，并从中获得极高的审美愉悦。
+              </div>
+            </div>
+            <!-- 图片 ③ 视觉美术 -->
+            <div class="mech-img-slot">
+              <img src="image/art.jpg" alt="游戏水墨美术风格截图" class="media-img img-a">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: Culture -->
+      <div class="mech-card reveal reveal-delay-2" data-id="culture">
+        <div class="mech-card-header">
+          <div class="mech-icon">📜</div>
+          <div class="mech-header-text">
+            <div class="mech-num">MECHANISM 02</div>
+            <div class="mech-title">文化表达</div>
+            <div class="mech-subtitle">互文性的在地叙事</div>
+          </div>
+        </div>
+        <div class="mech-summary">
+          游戏通过数字复现大报恩寺琉璃塔等历史地标，穿插《牡丹亭》等文化典故，将宏大历史<strong>降解为玩家触手可及的市井生活</strong>。
+        </div>
+        <button class="mech-expand-btn" aria-expanded="false">
+          <span>展开设计逻辑</span><span class="expand-arrow">▾</span>
+        </button>
+        <div class="mech-detail">
+          <div class="mech-detail-inner">
+            <div class="logic-block">
+              <div class="logic-label">设计逻辑</div>
+              <div class="logic-text">通过“数字复制”技术对<strong>大报恩寺琉璃塔</strong>等历史地标进行再现，穿插《牡丹亭》典故，将宏大历史叙事拆解为人物羁绊、建筑故事与日常劳作。</div>
+            </div>
+            <div class="logic-block">
+              <div class="logic-label">因果分析</div>
+              <div class="logic-text">
+                <span class="because"></span>玩家不再是历史的旁观者，而是亲手参与地标的重建与市井故事的推进。<span class="therefore">所以</span>他们与江南文化之间形成了真实的<strong>情感连接</strong>，文化认同在互动中自然生长，而非被强行灌输。
+              </div>
+            </div>
+            <!-- 图片 ④ 文化表达 -->
+            <div class="mech-img-slot">
+              <img src="image/culture.jpg" alt="历史地标文化还原截图" class="media-img img-a">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3: Emotion -->
+      <div class="mech-card reveal reveal-delay-1" data-id="emotion">
+        <div class="mech-card-header">
+          <div class="mech-icon">🌾</div>
+          <div class="mech-header-text">
+            <div class="mech-num">MECHANISM 03</div>
+            <div class="mech-title">情绪设计</div>
+            <div class="mech-subtitle">种田基建的掌控快感</div>
+          </div>
+        </div>
+        <div class="mech-summary">
+          游戏底层采用经典“种田”机制（建造—收获—扩张），节奏佛系，<strong>高自由度的确定性反馈</strong>完美对冲了现实生活的失序焦虑。
+        </div>
+        <button class="mech-expand-btn" aria-expanded="false">
+          <span>展开设计逻辑</span><span class="expand-arrow">▾</span>
+        </button>
+        <div class="mech-detail">
+          <div class="mech-detail-inner">
+            <div class="logic-block">
+              <div class="logic-label">设计逻辑</div>
+              <div class="logic-text">底层是经典“种田”循环（建造—收获—扩张），杂糅了抽卡与探险机制，整体节奏<strong>佛系而从容</strong>。没有惩罚机制，只有持续的正向积累。</div>
+            </div>
+            <div class="logic-block">
+              <div class="logic-label">因果分析</div>
+              <div class="logic-text">
+                <span class="because">因为</span>中国玩家骨子里有务实的农耕思维，高自由度的基建玩法能提供极高的<strong>确定性反馈</strong>与成就感，<span class="therefore"></span>玩家“自己说了算”的掌控感完美对冲了现实生活中的不确定焦虑，带来了真正的治愈体验。
+              </div>
+            </div>
+            <!-- 图片 ⑤ 情绪设计 -->
+            <div class="mech-img-slot">
+              <img src="image/emotion.jpg" alt="城市布局与居民日常截图" class="media-img img-a">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 4: Participation -->
+      <div class="mech-card reveal reveal-delay-2" data-id="participation">
+        <div class="mech-card-header">
+          <div class="mech-icon">🏗</div>
+          <div class="mech-header-text">
+            <div class="mech-num">MECHANISM 04</div>
+            <div class="mech-title">玩法参与</div>
+            <div class="mech-subtitle">低门槛的全民造景</div>
+          </div>
+        </div>
+        <div class="mech-summary">
+          弱化复杂数值计算，放大“摆放建筑”的视觉反馈，<strong>即时且美观的操作回报</strong>使全年龄段玩家都能轻松投入。
+        </div>
+        <button class="mech-expand-btn" aria-expanded="false">
+          <span>展开设计逻辑</span><span class="expand-arrow">▾</span>
+        </button>
+        <div class="mech-detail">
+          <div class="mech-detail-inner">
+            <div class="logic-block">
+              <div class="logic-label">设计逻辑</div>
+              <div class="logic-text">虽是经营游戏，却<strong>弱化了复杂数值计算</strong>，把重心放在“摆放建筑”的视觉即时反馈上。每一次放置构成了一次审美创作。</div>
+            </div>
+            <div class="logic-block">
+              <div class="logic-label">因果分析</div>
+              <div class="logic-text">
+                <span class="because">因为</span>操作门槛极低，且视觉反馈即时而美观，<span class="therefore">所以</span>无论是硬核玩家还是休闲玩家，都能轻松投入其中，把自己对江南的<strong>私人想象</strong>化为肉眼可见的现实。创造感是最核心的情感纽带。
+              </div>
+            </div>
+            <!-- 图片 ⑥ 玩法参与 -->
+            <div class="mech-img-slot">
+              <img src="image/build.jpg" alt="建筑摆放互动截图" class="media-img img-a">
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /mech-grid -->
+  </div>
+</section>
+
+<!-- ==================== SPREAD ==================== -->
+<section id="spread">
+  <div class="wide-container">
+    <div class="bamboo-divider reveal">
+      <span class="bamboo-label">Section 04 · 出圈与传播机制</span>
+    </div>
+    <h2 class="section-heading reveal">从画面到现场</h2>
+    <p class="section-sub reveal">社交裂变与虚实闭环</p>
+
+    <div class="spread-grid">
+
+      <!-- Panel A -->
+      <div class="spread-panel reveal reveal-delay-1" data-label="社交传播">
+        <div class="spread-panel-title">社交货币与二创生态</div>
+        <div class="spread-panel-sub">SOCIAL CURRENCY × UGC</div>
+        <p>游戏画风极具<span class="kw">辨识度</span>，抽卡机制带有随机性，每一次“好运降临”都天然是值得分享的内容。</p>
+        <div class="flow-diagram">
+          <div class="flow-node">绝美布局截图</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node">微博小红书发布</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node">同人图 / 攻略产出</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node">社区粘性</div>
+        </div>
+        <p>因为玩家乐于分享城市布局或抽卡瞬间，所以激发了大量<span class="kw">UGC 内容</span>（同人图、表情包、攻略），形成了自发运转的传播飞轮。</p>
+        <!-- 图片 ⑦ 社交传播 -->
+        <img src="image/social.jpg" alt="小红书社交平台传播截图" class="media-img img-b">
+      </div>
+
+      <!-- Panel B -->
+      <div class="spread-panel reveal reveal-delay-2" data-label="文旅联动">
+        <div class="spread-panel-title">虚实结合的文旅联动</div>
+        <div class="spread-panel-sub">VIRTUAL ATTACHMENT → REAL VISIT</div>
+        <p>游戏对江南城市的精准还原，甚至<span class="kw">反向带动了线下旅游</span>，玩家在虚拟世界与地标建立了情感连接，转而去现实中“打卡”。</p>
+        <div class="flow-diagram">
+          <div class="flow-node">虚拟地方依恋</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node">线下景点打卡</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node">文化闭环完成</div>
+        </div>
+        <p>因为玩家在游戏中对大报恩寺等地标产生了<span class="kw">虚拟地方依恋</span>，所以会自发前往现实景点打卡，完成了一次从<strong>线上到线下</strong>的文化体验闭环。</p>
+        <!-- 图片 ⑧ 文旅联动 -->
+        <img src="image/tourism.jpg" alt="文旅联动线下打卡示意" class="media-img img-b">
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SUMMARY ==================== -->
+<section id="summary">
+  <div class="summary-scroll-bg" aria-hidden="true"></div>
+  <div class="summary-content">
+    <p class="summary-chapter reveal">Section 05 · 总结提炼 · Conclusion</p>
+    <h2 class="summary-quote reveal reveal-delay-1">
+      传统文化的<span class="hl">现代化转译</span>——<br>
+      让历史的厚重变成<span class="hl">可栖居的生活空间</span>
+    </h2>
+    <p class="summary-body reveal reveal-delay-2">
+      《江南百景图》用<strong style="color:var(--paper)">数字媒介的互动性</strong>消解了历史的厚重感，让传统文化不再是展览馆里的文物，而成为了一个可以被大众自由体验、改造和消费的数字生活空间。事实上，文化产品的破圈往往不来自内容的“高”“大”“全”，而来自情感的精准共鸣。
+    </p>
+    <div class="summary-tags reveal reveal-delay-3">
+      <span class="summary-tag">文化转译</span>
+      <span class="summary-tag">情绪产品</span>
+      <span class="summary-tag">慢节奏美学</span>
+      <span class="summary-tag">数字归属感</span>
+      <span class="summary-tag">低门槛参与</span>
+      <span class="summary-tag">虚实文旅</span>
+    </div>
+    <div class="scroll-ends reveal reveal-delay-4">
+      <div class="scroll-end"></div>
+      <span class="scroll-middle">卷 · 终</span>
+      <div class="scroll-end"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== FOOTER ==================== -->
+<footer>
+  <p>《江南百景图》案例分析 · Case Analysis </p>
+  <p style="margin-top:1rem;font-family:'ZCOOL XiaoWei','Noto Serif SC',serif;font-size:1.1rem;letter-spacing:0.32em;color:rgba(184,148,63,0.85);">袁清渠</p>
+  <p style="margin-top:0.3rem;font-family:'Noto Sans SC',sans-serif;font-size:0.68rem;letter-spacing:0.22em;color:rgba(184,148,63,0.45);">设 计 制 作</p>
+</footer>
+
+<!-- ==================== JAVASCRIPT ==================== -->
+<script>
+/* --------------------------------------------------
+   NAV: show after hero, hamburger toggle
+-------------------------------------------------- */
+const nav = document.getElementById('nav');
+const navToggle = document.getElementById('nav-toggle');
+const navLinks = document.getElementById('nav-links');
+
+navToggle.addEventListener('click', () => {
+  navLinks.classList.toggle('open');
+});
+// close on link click
+navLinks.querySelectorAll('a').forEach(a => {
+  a.addEventListener('click', () => navLinks.classList.remove('open'));
+});
+
+/* --------------------------------------------------
+   SCROLL: progress bar + nav visibility
+-------------------------------------------------- */
+const progressBar = document.getElementById('progress-bar');
+
+function onScroll() {
+  // progress
+  const scrolled = window.scrollY;
+  const max = document.documentElement.scrollHeight - window.innerHeight;
+  progressBar.style.width = (max > 0 ? (scrolled / max) * 100 : 0) + '%';
+
+  // nav visible after hero
+  const heroH = document.getElementById('hero').offsetHeight;
+  if (scrolled > heroH * 0.6) {
+    nav.classList.add('visible');
+  } else {
+    nav.classList.remove('visible');
+  }
+
+  // scroll-reveal
+  revealOnScroll();
+}
+
+window.addEventListener('scroll', onScroll, { passive: true });
+onScroll(); // initial
+
+/* --------------------------------------------------
+   SCROLL REVEAL
+-------------------------------------------------- */
+function revealOnScroll() {
+  document.querySelectorAll('.reveal:not(.visible)').forEach(el => {
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight * 0.88) {
+      el.classList.add('visible');
+    }
+  });
+}
+
+/* --------------------------------------------------
+   MECHANISM CARDS: expand/collapse
+-------------------------------------------------- */
+document.querySelectorAll('.mech-expand-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const card = btn.closest('.mech-card');
+    const isOpen = card.classList.toggle('open');
+    btn.querySelector('span:first-child').textContent = isOpen ? '收起' : '展开设计逻辑';
+    btn.setAttribute('aria-expanded', String(isOpen));
+  });
+});
+
+/* --------------------------------------------------
+   SMOOTH ANCHOR with offset for fixed nav
+-------------------------------------------------- */
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    const target = document.querySelector(a.getAttribute('href'));
+    if (!target) return;
+    e.preventDefault();
+    const offset = 64;
+    const top = target.getBoundingClientRect().top + window.scrollY - offset;
+    window.scrollTo({ top, behavior: 'smooth' });
+  });
+});
+
+/* --------------------------------------------------
+   PARALLAX: hero title slight drift
+-------------------------------------------------- */
+const heroBg = document.querySelector('.hero-bg-ink');
+window.addEventListener('scroll', () => {
+  if (heroBg) {
+    const y = window.scrollY * 0.25;
+    heroBg.style.transform = `translateY(${y}px)`;
+  }
+}, { passive: true });
+</script>
+</body>
+</html>
